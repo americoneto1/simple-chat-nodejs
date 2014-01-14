@@ -1,0 +1,8 @@
+#sala, #lista-salas {
+	display: none;
+}
+
+#lista-mensagens {
+	max-height: 400px;
+	overflow: auto;
+}
