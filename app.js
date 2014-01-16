@@ -5,7 +5,6 @@
 
 var express = require('express');
 var routes = require('./routes');
-var user = require('./routes/user');
 var http = require('http');
 var path = require('path');
 
@@ -28,7 +27,6 @@ if ('development' == app.get('env')) {
 }
 
 app.get('/', routes.index);
-app.get('/users', user.list);
 
 var server = http.createServer(app);
 var io = require('socket.io').listen(server);
@@ -37,51 +35,39 @@ server.listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
 });
 
-var salas = [
-	{ numero: 1, vagas: 2, ocupadas: 0 },
-	{ numero: 2, vagas: 3, ocupadas: 0 },
-	{ numero: 3, vagas: 5, ocupadas: 0 }
-];
+var modelsChat = require('./models/chat');
+var salas = new Array();
+salas.push(new modelsChat.Sala(1, 2));
+salas.push(new modelsChat.Sala(2, 2));
+salas.push(new modelsChat.Sala(3, 3));
+
+var chat = new modelsChat.Chat(salas);
 
 io.on("connection", function(client) {
 
-	function getSala(numero) {
-		for(i in salas) {
-			if(numero == salas[i].numero) {
-				return salas[i];
-			}
-		}
-	}
-
-	function temVaga(numero) {
-		var sala = getSala(numero);
-		return (sala.vagas > sala.ocupadas);
-	}
-
-	function preencheVaga(numero) {
-		var sala = getSala(numero);
-		sala.ocupadas++;
-	}
-
-	function sairDaSala() {
+	function sairDaSala() {		
 		client.get("dados", function(error, data) {
 			if(data !== null) {
-				client.leave(data.sala);
-				io.sockets.in(data.sala).emit("nova-mensagem-recebida", "<strong>" + data.usuario + "</strong> saiu da sala");
+				chat.sairSala(data.sala, function() {
+					client.leave(data.sala);
+					io.sockets.in(data.sala).emit("nova-mensagem-recebida", "<strong>" + data.usuario + "</strong> saiu da sala");
+				});
 			}
 		});
 	}
 
 	client.on("entrar-na-sala", function(data) {
-		//if(temVaga(data.sala)) {
-			io.sockets.in(data.sala).emit("nova-mensagem-recebida", "<strong>" + data.usuario + "</strong> acabou de entrar");
-			client.emit("nova-mensagem-recebida", "<strong>" + data.usuario + "</strong>, seja bem vindo a sala " + data.sala);
-			client.join(data.sala);
-			client.set("dados", data);
-		//	preencheVaga(data.sala);
-		//} else {
-		//	client.emit("sala-cheia", data.sala);
-		//}
+		try {
+			chat.entrarSala(data.sala, function() {				
+				io.sockets.in(data.sala).emit("nova-mensagem-recebida", "<strong>" + data.usuario + "</strong> acabou de entrar");
+				client.join(data.sala);
+				client.emit("nova-mensagem-recebida", "<strong>" + data.usuario + "</strong>, seja bem vindo a sala " + data.sala);
+				client.set("dados", data);
+				client.emit("entrou-na-sala");
+			});
+		} catch(e) {
+			client.emit("sala-cheia");
+		}
 		
 	});
 

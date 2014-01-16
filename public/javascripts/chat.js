@@ -30,11 +30,8 @@ $(function() {
 	});
 
 	$("#lista-salas a").on("click", function() {
-		$(this).parent().parent().hide(easing);
-		setSala($(this).parent().data("sala"));
-		$("#sala").show(easing, function() {
-			socket.emit("entrar-na-sala", { usuario: getUsuario(), sala: getSala() });
-		});
+		setSala($(this).parent().data("sala"));		
+		socket.emit("entrar-na-sala", { usuario: getUsuario(), sala: getSala() });		
 	});
 
 	$("#sala form").submit(function(event) {
@@ -49,6 +46,15 @@ $(function() {
 			$("#lista-mensagens").empty();
 			$("#lista-salas").show(easing);
 		});
+	});
+
+	socket.on("entrou-na-sala", function() {
+		$("#lista-salas").hide(easing);
+		$("#sala").show(easing);
+	});
+
+	socket.on("sala-cheia", function() {
+		alert("Sala Cheia"); //to do
 	});
 
 	socket.on("nova-mensagem-recebida", function(mensagem) {
