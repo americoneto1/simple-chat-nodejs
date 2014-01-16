@@ -63,10 +63,19 @@ io.on("connection", function(client) {
 		sala.ocupadas++;
 	}
 
+	function sairDaSala() {
+		client.get("dados", function(error, data) {
+			if(data !== null) {
+				client.leave(data.sala);
+				io.sockets.in(data.sala).emit("nova-mensagem-recebida", "<strong>" + data.usuario + "</strong> saiu da sala");
+			}
+		});
+	}
+
 	client.on("entrar-na-sala", function(data) {
 		//if(temVaga(data.sala)) {
-			io.sockets.in(data.sala).emit("nova-mensagem-recebida", data.usuario + " acabou de entrar");
-			client.emit("nova-mensagem-recebida", data.usuario + ", seja bem vindo a sala " + data.sala);
+			io.sockets.in(data.sala).emit("nova-mensagem-recebida", "<strong>" + data.usuario + "</strong> acabou de entrar");
+			client.emit("nova-mensagem-recebida", "<strong>" + data.usuario + "</strong>, seja bem vindo a sala " + data.sala);
 			client.join(data.sala);
 			client.set("dados", data);
 		//	preencheVaga(data.sala);
@@ -79,9 +88,11 @@ io.on("connection", function(client) {
 	client.on("nova-mensagem-enviada", function(mensagem) {
 		if (mensagem !== "") {
 			client.get("dados", function(error, data) {
-				var msg = data.usuario + ": " + mensagem;
-				io.sockets.in(data.sala).emit("nova-mensagem-recebida", msg);	
+				io.sockets.in(data.sala).emit("nova-mensagem-recebida", "<strong>" + data.usuario + "</strong>: " + mensagem);
 			});
 		}
 	});
+
+	client.on("sair-da-sala", sairDaSala);
+	client.on("disconnect", sairDaSala);
 });

@@ -3,6 +3,8 @@ $(function() {
 	var socket = io.connect(document.URL);
 	var easing = 2000;
 
+	$("#usuario").focus();
+
 	function getSala() {
 		return $("#sala strong").html();
 	}
@@ -16,9 +18,9 @@ $(function() {
 	}
 
 	$("#login form").submit(function(event) {
-		var usuario = getUsuario();
-		$("#usuario").attr("disabled", "disabled");
+		var usuario = getUsuario();		
 		if(usuario !== "") {
+			$("#usuario").attr("disabled", "disabled");
 			$(this).hide(easing, function() {
 				$(".header h3").html($(".header h3").html() + " - " + usuario);
 				$("#lista-salas").show(easing);
@@ -39,6 +41,14 @@ $(function() {
 		socket.emit("nova-mensagem-enviada", $("#mensagem").val());
 		$("#mensagem").val("");
 		event.preventDefault();
+	});
+
+	$("#sair").on("click", function() {		
+		$("#sala").hide(easing, function() {
+			socket.emit("sair-da-sala");
+			$("#lista-mensagens").empty();
+			$("#lista-salas").show(easing);
+		});
 	});
 
 	socket.on("nova-mensagem-recebida", function(mensagem) {
