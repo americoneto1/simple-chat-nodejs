@@ -40,6 +40,18 @@ $(function() {
 		event.preventDefault();
 	});
 
+	$("#mensagem").on("keydown", function(event) {
+		if (event.which != 8) { //Backspace
+			socket.emit("digitou-mensagem");
+		}		
+	});
+
+	$("#mensagem").on("keyup", function(event) {
+		setTimeout(function() {
+			socket.emit("parou-de-digitar");
+		}, 6000); //Aguarda 6seg para enviar msg que parou de digitar
+	});
+
 	$("#sair").on("click", function() {		
 		$("#sala").hide(easing, function() {
 			socket.emit("sair-da-sala");
@@ -60,5 +72,13 @@ $(function() {
 	socket.on("nova-mensagem-recebida", function(mensagem) {
 		$("#lista-mensagens").append($("<li class=\"list-group-item\">" + mensagem + "</li>"));
 		$("#lista-mensagens").animate({scrollTop: '10000px'});
+	});
+
+	socket.on("esta-digitando", function(mensagem) {
+		$("#status").html(mensagem);
+	});
+
+	socket.on("nao-esta-digitando", function() {
+		$("#status").empty();
 	});
 });

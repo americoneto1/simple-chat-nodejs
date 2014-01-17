@@ -67,8 +67,19 @@ io.on("connection", function(client) {
 			});
 		} catch(e) {
 			client.emit("sala-cheia");
-		}
-		
+		}		
+	});
+
+	client.on("digitou-mensagem", function() {
+		client.get("dados", function(error, data) {
+			io.sockets.in(data.sala).except(client.id).emit("esta-digitando", data.usuario + " está digitando...");
+		});
+	});
+
+	client.on("parou-de-digitar", function() {
+		client.get("dados", function(error, data) {
+			io.sockets.in(data.sala).emit("nao-esta-digitando");
+		});
 	});
 
 	client.on("nova-mensagem-enviada", function(mensagem) {

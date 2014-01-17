@@ -28,6 +28,7 @@ function Chat(salas) {
 			aoEntrar();
 			sala.preencheVaga();
 		} else {
+			console.log("erro");
 			throw new Exception("Sala Cheia");
 		}
 	}
